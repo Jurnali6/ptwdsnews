@@ -1,0 +1,23 @@
+backend:
+  name: git-gateway
+  branch: main
+
+# Lokasi penyimpanan gambar lokal sebelum dilewatkan ke ImageKit
+media_folder: "uploads"
+public_folder: "https://ik.imagekit.io/ID_IMAGEKIT_ANDA/uploads" # Ganti ID ImageKit Anda
+
+collections:
+  - name: "posts"
+    label: "Berita & Artikel"
+    folder: "content/posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Judul Berita", name: "title", widget: "string"}
+      - {label: "Tanggal Terbit", name: "date", widget: "datetime"}
+      - {label: "Kategori", name: "category", widget: "select", options: ["Nasional", "Politik", "Viral", "Ekonomi", "Hukum"]}
+      - {label: "Penulis", name: "author", widget: "string", default: "Redaksi"}
+      - {label: "Gambar Utama", name: "image", widget: "image"}
+      - {label: "Caption Gambar", name: "image_caption", widget: "string", required: false}
+      - {label: "Simpan sebagai Draf?", name: "draft", widget: "boolean", default: false}
+      - {label: "Isi Artikel", name: "body", widget: "markdown"}
