@@ -1,22 +1,23 @@
-# ==========================================
-# Konfigurasi Dashboard PTWDS News
-# ==========================================
+backend:
+  name: github # Ubah ke 'git-gateway' jika menggunakan Netlify Identity
+  repo: username-github/repo-website-anda # Ganti dengan repo Anda
+  branch: main # Ganti dengan branch utama Anda
 
-site:
-  name: "PTWDS News"
-  domain: "ptwdsnews.cloud"
-  description: "PTWDS News Management System"
+# Pengaturan folder gambar
+media_folder: "static/images/uploads" # Folder tempat gambar disimpan di repo
+public_folder: "/images/uploads" # URL publik untuk gambar
 
-# Kredensial Login Admin (Catatan: Hindari password sederhana di tahap produksi)
-admin:
-  email: "admin@ptwdsnews.cloud"
-  password: "admin"
-
-# Konfigurasi Database (Google Apps Script)
-api:
-  script_url: "https://script.google.com/macros/s/AKfycbxK03aPFxnWadssqlubzoxidW_78cPUBJC0z0rttRg_3ItBGBsP42XhhZpZxSJysOrZ2w/exec"
-
-# Konfigurasi Upload Gambar (ImageKit.io)
-imagekit:
-  public_key: "public_GDQUCyVsO4E4swVuMvRzBQy51zk="
-  url_endpoint: "https://ik.imagekit.io/ptwdsnewscloud/artikel/"
+# Konfigurasi Koleksi (Mirip form input di HTML Anda)
+collections:
+  - name: "artikel"
+    label: "Artikel Berita"
+    folder: "content/berita" # Folder tempat artikel .md akan disimpan
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Judul Artikel", name: "title", widget: "string"}
+      - {label: "Penulis / Redaksi", name: "author", widget: "string", default: "Redaksi PTWDS"}
+      - {label: "Tanggal", name: "date", widget: "datetime"}
+      - {label: "Kategori", name: "kategori", widget: "select", options: ["Berita Utama", "Opini", "Berita Daerah", "Pendidikan", "Budaya"]}
+      - {label: "Gambar Utama / Sampul", name: "image", widget: "image"}
+      - {label: "Isi Berita", name: "body", widget: "markdown"}
