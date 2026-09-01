@@ -1,0 +1,80 @@
+<script>
+        // Kredensial ImageKit Anda
+        const IMAGEKIT_PRIVATE_KEY = "private_CHEYOJEcOqMCDoFOzMyzK6XKRo4="; 
+        
+        // URL GOOGLE APPS SCRIPT ANDA
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxK03aPFxnWadssqlubzoxidW_78cPUBJC0z0rttRg_3ItBGBsP42XhhZpZxSJysOrZ2w/exec"; 
+
+        document.getElementById('postForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('statusMessage');
+            
+            btn.disabled = true;
+            btn.innerText = "Mengunggah Gambar ke ImageKit...";
+            status.innerText = "";
+            status.className = "mt-4 text-center font-bold text-blue-600";
+
+            try {
+                // 1. UPLOAD GAMBAR KE IMAGEKIT
+                const fileInput = document.getElementById('imageFile');
+                const file = fileInput.files[0];
+                
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("fileName", file.name);
+
+                const authHeader = "Basic " + btoa(IMAGEKIT_PRIVATE_KEY + ":");
+
+                const imagekitResponse = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+                    method: "POST",
+                    headers: { "Authorization": authHeader },
+                    body: formData
+                });
+
+                const imagekitData = await imagekitResponse.json();
+                if(!imagekitData.url) throw new Error("Gagal mengunggah gambar");
+                
+                const imageUrl = imagekitData.url;
+
+                // 2. KIRIM ARTIKEL KE GOOGLE SHEETS
+                btn.innerText = "Menyimpan ke Google Sheets...";
+                
+                const postData = {
+                    action: "new_post",
+                    title: document.getElementById('title').value,
+                    category: document.getElementById('category').value,
+                    image: imageUrl,
+                    imageCaption: document.getElementById('imageCaption').value,
+                    paragraphs: document.getElementById('paragraphs').value,
+                    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                    isHeadline: document.getElementById('isHeadline').value,
+                    author_id: "101" 
+                };
+
+                // Request ke Apps Script Anda
+                const sheetResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify(postData)
+                });
+
+                const sheetData = await sheetResponse.json();
+
+                if(sheetData.status === "success") {
+                    status.innerText = "Artikel Berhasil Dipublikasikan!";
+                    status.className = "mt-4 text-center font-bold text-green-600";
+                    document.getElementById('postForm').reset();
+                } else {
+                    throw new Error("Gagal menyimpan ke Sheets");
+                }
+
+            } catch (error) {
+                console.error(error);
+                status.innerText = "Terjadi Kesalahan: " + error.message;
+                status.className = "mt-4 text-center font-bold text-red-600";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Publikasikan Artikel";
+            }
+        });
+    </script>
