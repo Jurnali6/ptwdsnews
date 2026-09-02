@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | PTWDS News</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Quill Editor CSS & JS -->
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    
     <style>
-        .ql-editor { min-height: 250px; font-size: 16px; }
+        .ql-editor { min-height: 280px; font-size: 16px; font-family: sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 md:p-6">
@@ -33,8 +37,8 @@
         </form>
     </div>
 
-    <!-- BAGIAN DASHBOARD (Disembunyikan sebelum login) -->
-    <div id="dashboardSection" class="hidden w-full max-w-3xl bg-white p-6 md:p-8 rounded-lg shadow">
+    <!-- BAGIAN DASHBOARD -->
+    <div id="dashboardSection" class="hidden w-full max-w-4xl bg-white p-6 md:p-8 rounded-lg shadow my-8">
         <div class="flex justify-between items-center mb-6 pb-4 border-b">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">Tambah Artikel Berita Baru</h2>
@@ -45,30 +49,59 @@
             </button>
         </div>
         
-        <!-- Form Artikel -->
-        <p class="text-gray-500 mb-4">Dashboard berhasil dibuka! (Formulir disederhanakan untuk contoh)</p>
-        <button id="btnLogout2" class="w-full bg-red-600 text-white font-bold py-2 rounded hover:bg-red-800">Uji Coba Logout</button>
+        <!-- Form Artikel Berita -->
+        <form id="articleForm" class="space-y-5">
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700">Judul Artikel</label>
+                <input type="text" id="articleTitle" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Masukkan judul berita..." required>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Kategori</label>
+                    <select id="articleCategory" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="Berita Utama">Berita Utama</option>
+                        <option value="Daerah">Daerah</option>
+                        <option value="Pendidikan">Pendidikan</option>
+                        <option value="Opini">Opini</option>
+                        <option value="Budaya">Budaya</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">URL Gambar Sampul</label>
+                    <input type="url" id="articleImage" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="https://ik.imagekit.io/...">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700">Isi Berita</label>
+                <!-- Container Wadah Quill Editor -->
+                <div id="editor-container" class="bg-white rounded-b"></div>
+            </div>
+
+            <button type="submit" class="w-full bg-green-700 text-white font-bold py-3 rounded hover:bg-green-800 transition">
+                Terbitkan Berita
+            </button>
+        </form>
     </div>
 
     <script>
-        // Logika Login yang tidak error
         const loginSection = document.getElementById('loginSection');
         const dashboardSection = document.getElementById('dashboardSection');
         const loginForm = document.getElementById('loginForm');
-        
-        // Cek apakah sebelumnya sudah login
+        let quill; // Variabel penampung instance Quill
+
+        // Cek Sesi Login
         if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
             showDashboard();
         }
 
-        // Proses saat tombol ditekan
+        // Submit Login
         loginForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Mencegah halaman refresh
-            
+            e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
 
-            // Cek Kredensial
             if (email === "admin@ptwdsnews.cloud" && password === "admin") {
                 sessionStorage.setItem('isAdminLoggedIn', 'true');
                 showDashboard();
@@ -77,21 +110,58 @@
             }
         });
 
-        // Tombol Logout
-        document.getElementById('btnLogout').addEventListener('click', logout);
-        document.getElementById('btnLogout2').addEventListener('click', logout);
-
-        function logout() {
+        // Logout
+        document.getElementById('btnLogout').addEventListener('click', function() {
             sessionStorage.removeItem('isAdminLoggedIn');
-            location.reload(); // Refresh halaman agar kembali ke login
-        }
+            location.reload();
+        });
 
-        // Fungsi menampilkan dashboard
+        // Menampilkan Dashboard & Inisialisasi Quill
         function showDashboard() {
             loginSection.classList.add('hidden');
             dashboardSection.classList.remove('hidden');
             document.body.classList.remove('flex', 'items-center', 'justify-center');
+
+            // Inisialisasi Quill Editor hanya sekali saat dashboard dibuka
+            if (!quill) {
+                quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Tuliskan narasi berita lengkap di sini...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['blockquote', 'code-block'],
+                            ['link', 'image'],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
         }
+
+        // Penanganan Proses Simpan / Send Artikel
+        document.getElementById('articleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('articleTitle').value;
+            const category = document.getElementById('articleCategory').value;
+            const image = document.getElementById('articleImage').value;
+            
+            // Mengambil isi editor dalam bentuk HTML murni
+            const contentHtml = quill.root.innerHTML;
+
+            // Memastikan isi tidak kosong
+            if (quill.getText().trim().length === 0) {
+                alert("Isi berita tidak boleh kosong!");
+                return;
+            }
+
+            console.log("Data Siap Kirim:", { title, category, image, contentHtml });
+            alert("Artikel '" + title + "' berhasil diproses!\n(Isi HTML dari Quill berhasil ditangkap)");
+        });
     </script>
 </body>
 </html>
