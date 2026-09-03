@@ -1,1 +1,474 @@
 <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | PTWDS News</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Quill Editor CSS & JS -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    
+    <style>
+        .ql-editor { min-height: 250px; font-size: 16px; font-family: sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-3 md:p-6">
+
+    <!-- BAGIAN 1: FORM LOGIN (EMAIL, PASSWORD, PIN 4 DIGIT) -->
+    <div id="loginSection" class="w-full max-w-md bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-blue-950">Login Admin PTWDS</h2>
+            <p class="text-xs text-gray-500 mt-1">Sistem Manajemen Berita ptwdsnews.cloud</p>
+        </div>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700 text-sm">Email Admin</label>
+                <input type="email" id="loginEmail" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none text-sm" placeholder="admin@ptwdsnews.cloud" required>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700 text-sm">Password</label>
+                <input type="password" id="loginPassword" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none text-sm" placeholder="••••••••" required>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700 text-sm">PIN Keamanan (4 Angka)</label>
+                <input type="password" id="loginPin" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none text-center tracking-widest text-lg font-bold text-blue-900" placeholder="1234" required>
+                <p class="text-[11px] text-gray-400 mt-1 text-center">*Default PIN awal: <strong>1234</strong> (Bisa diubah setelah login)</p>
+            </div>
+            <button type="submit" class="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition text-sm shadow">
+                Masuk ke Dashboard Admin
+            </button>
+        </form>
+    </div>
+
+    <!-- BAGIAN 2: DASHBOARD UTAMA -->
+    <div id="dashboardSection" class="hidden w-full max-w-5xl bg-white p-4 md:p-8 rounded-xl shadow-lg border border-gray-200 my-6">
+        
+        <!-- Header Dashboard -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Control Panel Redaksi</h2>
+                <p class="text-xs text-green-600 font-semibold mt-0.5">● Sesi Aktif: admin@ptwdsnews.cloud</p>
+            </div>
+            <button id="btnLogout" class="text-xs bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg font-semibold hover:bg-red-100 transition">
+                Keluar (Logout)
+            </button>
+        </div>
+
+        <!-- Menu Navigasi Tab -->
+        <div class="flex border-b mb-6 overflow-x-auto space-x-2 text-sm font-semibold text-gray-600">
+            <button id="tabBtnEditor" onclick="switchTab('editor')" class="py-2.5 px-4 border-b-2 border-blue-900 text-blue-900 font-bold focus:outline-none flex items-center space-x-1">
+                <span>📝 Tulis Artikel</span>
+            </button>
+            <button id="tabBtnList" onclick="switchTab('list')" class="py-2.5 px-4 border-b-2 border-transparent hover:text-blue-900 focus:outline-none flex items-center space-x-1">
+                <span>📋 Kelola Artikel & Draf</span>
+            </button>
+            <button id="tabBtnSettings" onclick="switchTab('settings')" class="py-2.5 px-4 border-b-2 border-transparent hover:text-blue-900 focus:outline-none flex items-center space-x-1">
+                <span>⚙️ Ubah PIN Admin</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: FORM EDITOR ARTIKEL -->
+        <div id="tabContentEditor" class="space-y-5">
+            <form id="articleForm" class="space-y-5">
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700 text-sm">Judul Berita Utama</label>
+                    <input type="text" id="articleTitle" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Ketikkan judul berita..." required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold mb-1 text-gray-700 text-sm">Penulis / Editor Redaksi</label>
+                        <input type="text" id="articleAuthor" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" value="Redaksi PTWDS News" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-gray-700 text-sm">Kategori Berita</label>
+                        <select id="articleCategory" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="Berita Utama">Berita Utama</option>
+                            <option value="Daerah">Berita Daerah</option>
+                            <option value="Hukum & Kriminal">Hukum & Kriminal</option>
+                            <option value="Politik">Politik</option>
+                            <option value="Ekonomi">Ekonomi & Bisnis</option>
+                            <option value="Pendidikan">Pendidikan</option>
+                            <option value="Budaya & Pariwisata">Budaya & Pariwisata</option>
+                            <option value="Opini">Opini</option>
+                            <option value="Olahraga">Olahraga</option>
+                            <option value="Teknologi">Teknologi</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Box Upload & Kompresi Gambar 16:9 -->
+                <div class="border p-4 rounded-xl bg-gray-50 space-y-3 border-gray-200">
+                    <label class="block font-semibold text-gray-700 text-sm">Upload Gambar Sampul Utama (Otomatis Crop 16:9 & Kompres Mini)</label>
+                    <input type="file" id="imageInput" accept="image/*" class="w-full p-2 border rounded-lg bg-white text-xs">
+                    
+                    <div id="previewBox" class="hidden space-y-2 mt-2">
+                        <p class="text-xs text-green-700 font-semibold flex items-center">✓ Pratinjau Crop 16:9 Siap Diunggah</p>
+                        <div class="aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-black shadow-inner">
+                            <img id="imagePreview" class="w-full h-full object-cover" alt="Preview Gambar">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold mb-1 text-gray-700 text-xs">Keterangan / Caption Gambar (Foto Redaksi)</label>
+                        <input type="text" id="imageCaption" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm" placeholder="Contoh: Suasana rapat redaksi PTWDS News (Foto: Dok. PTWDS)">
+                    </div>
+                </div>
+
+                <!-- Content Editor -->
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700 text-sm">Isi Narasi Berita Lengkap</label>
+                    <div id="editor-container" class="bg-white rounded-b-lg"></div>
+                </div>
+
+                <!-- Tombol Aksi: Simpan Draf atau Publikasi langsung -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                    <button type="button" onclick="submitArticle('Draft')" id="btnDraft" class="w-full bg-amber-600 text-white font-bold py-3 rounded-lg hover:bg-amber-700 transition text-sm shadow">
+                        💾 Simpan Sebagai Draf
+                    </button>
+                    <button type="button" onclick="submitArticle('Published')" id="btnPublish" class="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition text-sm shadow">
+                        🚀 Publikasikan Berita
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 2: KELOLA ARTIKEL & DRAF -->
+        <div id="tabContentList" class="hidden space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-2">
+                <h3 class="font-bold text-gray-800 text-lg">Daftar Artikel di Google Sheet</h3>
+                <button onclick="loadArticlesFromGAS()" class="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-semibold">
+                    🔄 Refresh Data Artikel
+                </button>
+            </div>
+
+            <!-- Tabel Artikel -->
+            <div class="overflow-x-auto border rounded-xl bg-white shadow-sm">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-gray-100 text-gray-700 font-bold border-b">
+                        <tr>
+                            <th class="p-3">Gambar</th>
+                            <th class="p-3">Judul Berita</th>
+                            <th class="p-3">Kategori</th>
+                            <th class="p-3">Penulis</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="articleTableBody" class="divide-y text-gray-600">
+                        <tr>
+                            <td colspan="6" class="p-6 text-center text-gray-400">Memuat data artikel dari Google Sheet...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: PENGATURAN PIN ADMIN -->
+        <div id="tabContentSettings" class="hidden max-w-md space-y-4">
+            <h3 class="font-bold text-gray-800 text-lg">Ganti PIN Keamanan Admin</h3>
+            <p class="text-xs text-gray-500">Anda dapat mengubah PIN 4 digit default (1234) sesuai keinginan Anda.</p>
+            
+            <form id="changePinForm" class="space-y-3 bg-gray-50 p-4 border rounded-xl">
+                <div>
+                    <label class="block font-semibold mb-1 text-xs text-gray-700">PIN Lama</label>
+                    <input type="password" id="oldPin" maxlength="4" pattern="[0-9]{4}" class="w-full p-2 border rounded-lg text-center tracking-widest font-bold" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-xs text-gray-700">PIN Baru (4 Angka)</label>
+                    <input type="password" id="newPin" maxlength="4" pattern="[0-9]{4}" class="w-full p-2 border rounded-lg text-center tracking-widest font-bold" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-900 text-white font-bold py-2.5 rounded-lg hover:bg-blue-800 transition text-xs shadow">
+                    Simpan PIN Baru
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        const CONFIG = {
+            GAS_URL: "https://script.google.com/macros/s/AKfycbxK03aPFxnWadssqlubzoxidW_78cPUBJC0z0rttRg_3ItBGBsP42XhhZpZxSJysOrZ2w/exec",
+            IMAGEKIT_ENDPOINT: "https://ik.imagekit.io/ptwdsnewscloud"
+        };
+
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewBox = document.getElementById('previewBox');
+        
+        let quill;
+        let processedBase64Image = "";
+
+        // Mengambil PIN terdaftar dari localStorage (Default: 1234)
+        function getSavedPin() {
+            return localStorage.getItem('ptwds_admin_pin') || "1234";
+        }
+
+        // Cek Sesi Login
+        if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+            showDashboard();
+        }
+
+        // Form Login Handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            if (email === "admin@ptwdsnews.cloud" && password === "admin" && pin === getSavedPin()) {
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                showDashboard();
+            } else {
+                alert("Login Gagal! Pastikan Email, Password, dan PIN 4 Digit Anda Benar.");
+            }
+        });
+
+        // Logout
+        document.getElementById('btnLogout').addEventListener('click', function() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            location.reload();
+        });
+
+        // Tampilkan Dashboard & Init Quill
+        function showDashboard() {
+            loginSection.classList.add('hidden');
+            dashboardSection.classList.remove('hidden');
+            document.body.classList.remove('flex', 'items-center', 'justify-center');
+
+            if (!quill) {
+                quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Tulis narasi berita lengkap di sini...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['blockquote', 'link'],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
+        }
+
+        // Switch Tab Navigation
+        function switchTab(tabName) {
+            const tabs = ['editor', 'list', 'settings'];
+            tabs.forEach(t => {
+                document.getElementById('tabContent' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
+                const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                btn.classList.remove('border-blue-900', 'text-blue-900', 'font-bold');
+                btn.classList.add('border-transparent');
+            });
+
+            const activeBtn = document.getElementById('tabBtn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            activeBtn.classList.remove('border-transparent');
+            activeBtn.classList.add('border-blue-900', 'text-blue-900', 'font-bold');
+
+            document.getElementById('tabContent' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
+
+            if (tabName === 'list') {
+                loadArticlesFromGAS();
+            }
+        }
+
+        // Fitur Pemotongan Rasio 16:9 & Kompresi Mini (Canvas)
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const targetWidth = 800;
+                    const targetHeight = 450; // Rasio 16:9
+                    
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d');
+
+                    let sourceWidth = img.width;
+                    let sourceHeight = img.height;
+                    let sourceAspect = sourceWidth / sourceHeight;
+                    let targetAspect = 16 / 9;
+
+                    let sx, sy, sWidth, sHeight;
+                    if (sourceAspect > targetAspect) {
+                        sHeight = sourceHeight;
+                        sWidth = sourceHeight * targetAspect;
+                        sx = (sourceWidth - sWidth) / 2;
+                        sy = 0;
+                    } else {
+                        sWidth = sourceWidth;
+                        sHeight = sourceWidth / targetAspect;
+                        sx = 0;
+                        sy = (sourceHeight - sHeight) / 2;
+                    }
+
+                    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+                    
+                    // Kompres ke JPEG Kualitas 70% (~50-80KB)
+                    processedBase64Image = canvas.toDataURL('image/jpeg', 0.70);
+                    imagePreview.src = processedBase64Image;
+                    previewBox.classList.remove('hidden');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Submit Artikel (Publikasi / Draf)
+        function submitArticle(status) {
+            const title = document.getElementById('articleTitle').value.trim();
+            const author = document.getElementById('articleAuthor').value.trim();
+            const category = document.getElementById('articleCategory').value;
+            const caption = document.getElementById('imageCaption').value.trim();
+            const contentHtml = quill.root.innerHTML;
+
+            if (!title || !category) {
+                alert("Harap isi Judul dan Kategori Berita!");
+                return;
+            }
+
+            if (quill.getText().trim().length === 0) {
+                alert("Isi berita tidak boleh kosong!");
+                return;
+            }
+
+            const btnPublish = document.getElementById('btnPublish');
+            const btnDraft = document.getElementById('btnDraft');
+            btnPublish.disabled = true;
+            btnDraft.disabled = true;
+
+            const payload = {
+                action: "addArticle",
+                title: title,
+                author: author,
+                category: category,
+                imageCaption: caption,
+                imageData: processedBase64Image,
+                content: contentHtml,
+                status: status, // "Published" atau "Draft"
+                publishedAt: new Date().toISOString()
+            };
+
+            // Mengirim ke Google Apps Script via POST text/plain
+            fetch(CONFIG.GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Berhasil! Artikel disimpan dengan status: " + status);
+                    document.getElementById('articleForm').reset();
+                    quill.setContents([]);
+                    previewBox.classList.add('hidden');
+                    processedBase64Image = "";
+                    switchTab('list');
+                } else {
+                    alert("Gagal menyimpan ke Google Sheet: " + data.message);
+                }
+            })
+            .catch(err => {
+                alert("Gagal terhubung ke Google Sheet. Error: " + err.message);
+            })
+            .finally(() => {
+                btnPublish.disabled = false;
+                btnDraft.disabled = false;
+            });
+        }
+
+        // Ambil Daftar Artikel dari Google Sheet
+        function loadArticlesFromGAS() {
+            const tbody = document.getElementById('articleTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-400">Mengambil data artikel terbaru...</td></tr>';
+
+            fetch(CONFIG.GAS_URL + "?action=getArticles")
+            .then(res => res.json())
+            .then(data => {
+                if (data.articles && data.articles.length > 0) {
+                    tbody.innerHTML = '';
+                    data.articles.forEach(art => {
+                        const statusBadge = art.status === 'Published' 
+                            ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Publik</span>'
+                            : '<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">Draf</span>';
+                        
+                        const imgThumb = art.imageUrl 
+                            ? `<img src="${art.imageUrl}" class="w-14 h-8 object-cover rounded border">` 
+                            : `<div class="w-14 h-8 bg-gray-200 rounded flex items-center justify-center text-[9px]">No Img</div>`;
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50 border-b">
+                                <td class="p-2">${imgThumb}</td>
+                                <td class="p-2 font-semibold text-gray-800">${art.title}</td>
+                                <td class="p-2">${art.category}</td>
+                                <td class="p-2">${art.author}</td>
+                                <td class="p-2 text-[10px]">${statusBadge}</td>
+                                <td class="p-2 text-center space-x-1">
+                                    <button onclick="toggleArticleStatus('${art.id}', '${art.status}')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200 hover:bg-blue-100">Ubah Status</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-400">Belum ada artikel yang tersimpan.</td></tr>';
+                }
+            })
+            .catch(() => {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-red-500">Gagal memuat artikel dari Google Sheet. Periksa script GAS Anda.</td></tr>';
+            });
+        }
+
+        // Ganti Status Artikel (Draf <-> Publik)
+        function toggleArticleStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'Published' ? 'Draft' : 'Published';
+            fetch(CONFIG.GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "updateStatus", id: id, status: newStatus })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Status artikel berhasil diubah menjadi: " + newStatus);
+                    loadArticlesFromGAS();
+                }
+            });
+        }
+
+        // Form Ganti PIN Handler
+        document.getElementById('changePinForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const oldPin = document.getElementById('oldPin').value.trim();
+            const newPin = document.getElementById('newPin').value.trim();
+
+            if (oldPin !== getSavedPin()) {
+                alert("PIN Lama Anda Salah!");
+                return;
+            }
+
+            if (newPin.length !== 4) {
+                alert("PIN Baru harus persis 4 angka!");
+                return;
+            }
+
+            localStorage.setItem('ptwds_admin_pin', newPin);
+            alert("Berhasil! PIN Keamanan Admin telah diubah ke: " + newPin);
+            document.getElementById('changePinForm').reset();
+            switchTab('editor');
+        });
+    </script>
+</body>
+</html>
