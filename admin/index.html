@@ -1,1 +1,300 @@
 <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | PTWDS News</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Quill Editor CSS & JS -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    
+    <style>
+        .ql-editor { min-height: 280px; font-size: 16px; font-family: sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 md:p-6">
+
+    <!-- BAGIAN LOGIN (3 LAPIS KEAMANAN) -->
+    <div id="loginSection" class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Login Admin PTWDS</h2>
+            <p class="text-sm text-gray-500">Masukkan kredensial dan PIN keamanan</p>
+        </div>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700 text-sm">Email Admin</label>
+                <input type="email" id="loginEmail" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="admin@ptwdsnews.cloud" required>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700 text-sm">Password</label>
+                <input type="password" id="loginPassword" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="••••••••" required>
+            </div>
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700 text-sm">PIN Keamanan (4 Angka)</label>
+                <input type="password" id="loginPin" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none text-center tracking-widest text-lg font-bold" placeholder="1234" required>
+                <p class="text-xs text-gray-400 mt-1">*PIN default awal: 1234</p>
+            </div>
+            <button type="submit" class="w-full bg-blue-900 text-white font-bold py-3 rounded hover:bg-blue-800 transition">
+                Masuk ke Dashboard
+            </button>
+        </form>
+    </div>
+
+    <!-- BAGIAN DASHBOARD -->
+    <div id="dashboardSection" class="hidden w-full max-w-4xl bg-white p-6 md:p-8 rounded-lg shadow my-8">
+        <div class="flex justify-between items-center mb-6 pb-4 border-b">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Panel Publikasi Berita</h2>
+                <p class="text-xs text-green-600 font-semibold mt-1">● Terautentikasi: admin@ptwdsnews.cloud</p>
+            </div>
+            <button id="btnLogout" class="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded font-semibold hover:bg-red-200">
+                Keluar (Logout)
+            </button>
+        </div>
+        
+        <form id="articleForm" class="space-y-5">
+            <!-- Judul Artikel -->
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700">Judul Artikel Utama</label>
+                <input type="text" id="articleTitle" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ketikkan judul berita di sini..." required>
+            </div>
+
+            <!-- Penulis & Kategori -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Penulis / Editor Redaksi</label>
+                    <input type="text" id="articleAuthor" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" value="Redaksi PTWDS News" placeholder="Nama penulis/editor" required>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700">Kategori Berita</label>
+                    <select id="articleCategory" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="Berita Utama">Berita Utama</option>
+                        <option value="Daerah">Berita Daerah</option>
+                        <option value="Hukum & Kriminal">Hukum & Kriminal</option>
+                        <option value="Politik">Politik</option>
+                        <option value="Ekonomi & Bisnis">Ekonomi & Bisnis</option>
+                        <option value="Pendidikan">Pendidikan</option>
+                        <option value="Budaya & Pariwisata">Budaya & Pariwisata</option>
+                        <option value="Opini">Opini</option>
+                        <option value="Olahraga">Olahraga</option>
+                        <option value="Teknologi">Teknologi</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Upload Gambar Utama + Otomatis 16:9 Kompresi -->
+            <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
+                <label class="block font-semibold text-gray-700">Upload Gambar Utama / Sampul</label>
+                <input type="file" id="imageInput" accept="image/*" class="w-full p-2 border rounded bg-white text-sm" required>
+                
+                <!-- Box Preview Gambar 16:9 -->
+                <div id="previewBox" class="hidden space-y-2 mt-2">
+                    <p class="text-xs text-blue-600 font-semibold">✓ Gambar berhasil dipotong (16:9) & dikompresi mini</p>
+                    <div class="aspect-video w-full max-w-md overflow-hidden rounded border bg-black flex items-center justify-center">
+                        <img id="imagePreview" class="w-full h-full object-cover" alt="Preview Gambar">
+                    </div>
+                </div>
+
+                <!-- Keterangan / Caption Gambar -->
+                <div>
+                    <label class="block font-semibold mb-1 text-gray-700 text-sm">Keterangan Gambar (Caption / Foto Redaksi)</label>
+                    <input type="text" id="imageCaption" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white" placeholder="Contoh: Suasana kegiatan rapat redaksi (Foto: Dok. PTWDS News)" required>
+                </div>
+            </div>
+
+            <!-- Isi Berita (Quill Editor) -->
+            <div>
+                <label class="block font-semibold mb-1 text-gray-700">Isi Berita Lengkap</label>
+                <div id="editor-container" class="bg-white rounded-b"></div>
+            </div>
+
+            <!-- Tombol Submit -->
+            <button type="submit" id="btnSubmit" class="w-full bg-green-700 text-white font-bold py-3 rounded hover:bg-green-800 transition flex items-center justify-center space-x-2">
+                <span id="btnText">Publikasikan Berita Ke Google Sheets</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Konfigurasi API
+        const CONFIG = {
+            GAS_URL: "https://script.google.com/macros/s/AKfycbxK03aPFxnWadssqlubzoxidW_78cPUBJC0z0rttRg_3ItBGBsP42XhhZpZxSJysOrZ2w/exec",
+            IMAGEKIT_ENDPOINT: "https://ik.imagekit.io/ptwdsnewscloud",
+            DEFAULT_PIN: "1234"
+        };
+
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const loginForm = document.getElementById('loginForm');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewBox = document.getElementById('previewBox');
+        
+        let quill;
+        let processedBase64Image = ""; // Menyimpan hasil kompresi gambar 16:9
+
+        // Cek Sesi Login
+        if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+            showDashboard();
+        }
+
+        // Kredensial Login Email + Password + PIN 4 Digit
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            if (email === "admin@ptwdsnews.cloud" && password === "admin" && pin === CONFIG.DEFAULT_PIN) {
+                sessionStorage.setItem('isAdminLoggedIn', 'true');
+                showDashboard();
+            } else {
+                alert("Gagal Login! Cek kembali Email, Password, atau PIN 4 Digit Anda.");
+            }
+        });
+
+        // Logout
+        document.getElementById('btnLogout').addEventListener('click', function() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            location.reload();
+        });
+
+        // Inisialisasi Quill Editor
+        function showDashboard() {
+            loginSection.classList.add('hidden');
+            dashboardSection.classList.remove('hidden');
+            document.body.classList.remove('flex', 'items-center', 'justify-center');
+
+            if (!quill) {
+                quill = new Quill('#editor-container', {
+                    theme: 'snow',
+                    placeholder: 'Tuliskan narasi berita lengkap di sini...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            ['blockquote', 'link'],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
+        }
+
+        // Proses Pemotongan Gambar 16:9 dan Kompresi Mini (Canvas)
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    // Ukuran Mini Rasio 16:9 (800x450 piksel)
+                    const targetWidth = 800;
+                    const targetHeight = 450;
+                    
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+                    const ctx = canvas.getContext('2d');
+
+                    // Hitung Crop Tengah 16:9
+                    let sourceWidth = img.width;
+                    let sourceHeight = img.height;
+                    let sourceAspect = sourceWidth / sourceHeight;
+                    let targetAspect = 16 / 9;
+
+                    let sx, sy, sWidth, sHeight;
+                    if (sourceAspect > targetAspect) {
+                        sHeight = sourceHeight;
+                        sWidth = sourceHeight * targetAspect;
+                        sx = (sourceWidth - sWidth) / 2;
+                        sy = 0;
+                    } else {
+                        sWidth = sourceWidth;
+                        sHeight = sourceWidth / targetAspect;
+                        sx = 0;
+                        sy = (sourceHeight - sHeight) / 2;
+                    }
+
+                    // Gambar ke Canvas
+                    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+                    
+                    // Kompresi kualitas 75% JPEG
+                    processedBase64Image = canvas.toDataURL('image/jpeg', 0.75);
+                    imagePreview.src = processedBase64Image;
+                    previewBox.classList.remove('hidden');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Pengiriman Data ke Google Apps Script (Publikasi Berita)
+        document.getElementById('articleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('articleTitle').value.trim();
+            const author = document.getElementById('articleAuthor').value.trim();
+            const category = document.getElementById('articleCategory').value;
+            const caption = document.getElementById('imageCaption').value.trim();
+            const contentHtml = quill.root.innerHTML;
+
+            if (quill.getText().trim().length === 0) {
+                alert("Isi berita tidak boleh kosong!");
+                return;
+            }
+
+            if (!processedBase64Image) {
+                alert("Silakan pilih gambar utama terlebih dahulu!");
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            const btnText = document.getElementById('btnText');
+            btnSubmit.disabled = true;
+            btnText.innerText = "Mempublikasikan ke Google Sheets...";
+
+            // Payload Data Berita
+            const payload = {
+                action: "addArticle",
+                title: title,
+                author: author,
+                category: category,
+                imageCaption: caption,
+                imageData: processedBase64Image, // Gambar 16:9 Terkompresi
+                content: contentHtml,
+                publishedAt: new Date().toISOString()
+            };
+
+            // Kirim via POST ke Google Script
+            fetch(CONFIG.GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert("Berita '" + title + "' berhasil dipublikasikan ke Google Sheets!");
+                document.getElementById('articleForm').reset();
+                quill.setContents([]);
+                previewBox.classList.add('hidden');
+                processedBase64Image = "";
+            })
+            .catch(err => {
+                alert("Terjadi kesalahan saat mempublikasikan: " + err.message);
+            })
+            .finally(() => {
+                btnSubmit.disabled = false;
+                btnText.innerText = "Publikasikan Berita Ke Google Sheets";
+            });
+        });
+    </script>
+</body>
+</html>
