@@ -1,1 +1,503 @@
 <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTWDS News | Portal Berita Terkini & Terpercaya</title>
+    <meta name="description" content="Portal berita ptwdsnews.cloud dengan database SheetsPress.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        'news-blue': '#1e3a8a',
+                        'news-red': '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .hover-zoom img { transition: transform 0.3s ease; }
+        .hover-zoom:hover img { transform: scale(1.05); }
+        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .ticker-content { display: inline-block; white-space: nowrap; animation: ticker 25s linear infinite; }
+        
+        /* Article Typography */
+        .article-body p { margin-bottom: 1.5rem; line-height: 1.8; font-size: 1.125rem; color: #374151; }
+        .internal-link-box { border-left: 4px solid #1e3a8a; background: #f3f4f6; padding: 10px 15px; margin: 1.5rem 0; font-weight: 600; border-radius: 0 8px 8px 0;}
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50 border-b border-gray-100">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#" onclick="filterCategory('Beranda'); return false;" class="text-3xl font-serif font-black text-news-blue tracking-tight">
+                PTWDS<span class="text-news-red">NEWS</span><span class="text-sm font-sans text-gray-500 block -mt-2">.cloud</span>
+            </a>
+            
+            <!-- Navigasi Desktop -->
+            <nav class="hidden md:flex space-x-6 font-semibold text-sm">
+                <a href="#" onclick="filterCategory('Beranda'); return false;" class="text-news-blue hover:text-news-red transition">Beranda</a>
+                <a href="#" onclick="filterCategory('Berita Utama'); return false;" class="text-gray-700 hover:text-news-blue transition">Berita Utama</a>
+                <a href="#" onclick="filterCategory('Opini'); return false;" class="text-gray-700 hover:text-news-blue transition">Opini</a>
+                <a href="#" onclick="filterCategory('Berita Daerah'); return false;" class="text-gray-700 hover:text-news-blue transition">Berita Daerah</a>
+                <a href="#" onclick="filterCategory('Pendidikan'); return false;" class="text-gray-700 hover:text-news-blue transition">Pendidikan</a>
+                <a href="#" onclick="filterCategory('Budaya'); return false;" class="text-gray-700 hover:text-news-blue transition">Budaya</a>
+            </nav>
+        </div>
+
+        <!-- Menu Kategori Mobile (Scrollable Bar) -->
+        <div class="md:hidden bg-gray-100 border-t overflow-x-auto whitespace-nowrap px-4 py-2 flex space-x-4 text-xs font-semibold">
+            <a href="#" onclick="filterCategory('Beranda'); return false;" class="text-news-blue">Beranda</a>
+            <a href="#" onclick="filterCategory('Berita Utama'); return false;" class="text-gray-700">Berita Utama</a>
+            <a href="#" onclick="filterCategory('Opini'); return false;" class="text-gray-700">Opini</a>
+            <a href="#" onclick="filterCategory('Berita Daerah'); return false;" class="text-gray-700">Berita Daerah</a>
+            <a href="#" onclick="filterCategory('Pendidikan'); return false;" class="text-gray-700">Pendidikan</a>
+            <a href="#" onclick="filterCategory('Budaya'); return false;" class="text-gray-700">Budaya</a>
+        </div>
+    </header>
+
+    <!-- WRAPPER HALAMAN UTAMA -->
+    <div id="home-view">
+        <!-- Running Text / Breaking News -->
+        <div class="bg-gray-900 text-white flex items-center overflow-hidden">
+            <div class="bg-news-red font-bold px-4 py-2 z-10 whitespace-nowrap text-xs md:text-sm">BREAKING NEWS</div>
+            <div class="flex-1 overflow-hidden relative">
+                <div class="ticker-content text-xs md:text-sm" id="ticker-container">Memuat berita...</div>
+            </div>
+        </div>
+
+        <main class="container mx-auto px-4 py-8">
+            <!-- Featured Headline / Hero Section -->
+            <section class="mb-12" id="hero-container"></section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Konten Utama -->
+                <section class="lg:col-span-2">
+                    <h2 class="text-2xl font-serif font-bold border-b-4 border-news-blue pb-2 mb-6" id="section-title">Berita Terkini</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="latest-news-container"></div>
+                </section>
+
+                <!-- Sidebar / Terpopuler -->
+                <aside>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 sticky top-24">
+                        <h3 class="text-xl font-serif font-bold mb-4 border-l-4 border-news-red pl-3">Terpopuler</h3>
+                        <ul class="space-y-4" id="trending-container"></ul>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- WRAPPER HALAMAN DETAIL ARTIKEL -->
+    <div id="article-view" class="hidden container mx-auto px-4 py-8 max-w-4xl">
+        <button onclick="showHome()" class="mb-6 text-news-blue font-semibold hover:underline flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Kembali ke Beranda
+        </button>
+
+        <article class="bg-white p-6 md:p-10 rounded-lg shadow-sm border border-gray-100">
+            <!-- Header Artikel -->
+            <div class="mb-6 text-center md:text-left">
+                <span id="detail-category" class="text-news-red font-bold uppercase tracking-wider text-sm">Kategori</span>
+                <h1 id="detail-title" class="text-3xl md:text-5xl font-serif font-bold mt-3 mb-4 leading-tight text-gray-900">Judul Artikel</h1>
+                <div class="text-gray-500 text-sm flex items-center justify-center md:justify-start space-x-4 border-y border-gray-100 py-3">
+                    <span><i class="fas fa-user-edit mr-1"></i> <span id="detail-author">Redaksi PTWDS</span></span>
+                    <span><i class="far fa-clock mr-1"></i> <span id="detail-date">Tanggal</span></span>
+                </div>
+            </div>
+
+            <!-- Gambar Utama -->
+            <figure class="mb-8">
+                <img id="detail-image" src="" alt="Gambar Utama" class="w-full h-auto rounded-lg object-cover max-h-[500px]">
+                <figcaption id="detail-caption" class="text-sm text-gray-500 mt-2 text-center italic bg-gray-50 p-2 rounded-b-lg border border-t-0">
+                    Keterangan: Ilustrasi gambar utama
+                </figcaption>
+            </figure>
+
+            <!-- Isi Artikel -->
+            <div id="detail-content" class="article-body font-serif">
+                <!-- Konten diinjeksi oleh JS -->
+            </div>
+
+            <!-- BAGIAN TOMBOL SHARE SOCIAL MEDIA -->
+            <div class="mt-10 pt-6 border-t border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-3 flex items-center text-sm md:text-base">
+                    <i class="fas fa-share-alt mr-2 text-news-blue"></i> Bagikan Artikel Ini:
+                </h4>
+                <div class="flex flex-wrap gap-2 md:gap-3" id="social-share-buttons"></div>
+            </div>
+        </article>
+
+        <!-- Bagian Komentar & Ulasan -->
+        <section class="mt-10 bg-white p-6 md:p-10 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="text-2xl font-bold font-serif mb-6 border-b pb-2"><i class="far fa-comments text-news-blue mr-2"></i> Ruang Diskusi & Ulasan</h3>
+            
+            <form id="commentForm" class="mb-8 bg-gray-50 p-4 rounded-lg border">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="comment-nama" placeholder="Nama Anda" class="w-full p-3 border rounded focus:outline-none focus:border-news-blue text-sm" required>
+                    <input type="email" id="comment-email" placeholder="Email Anda (Tidak dipublikasikan)" class="w-full p-3 border rounded focus:outline-none focus:border-news-blue text-sm" required>
+                </div>
+                <textarea id="comment-text" placeholder="Tulis komentar atau ulasan Anda di sini..." rows="4" class="w-full p-3 border rounded focus:outline-none focus:border-news-blue text-sm mb-4" required></textarea>
+                <button type="submit" id="comment-submit" class="bg-news-blue hover:bg-blue-800 text-white font-bold py-2 px-6 rounded transition text-sm">Kirim Komentar</button>
+            </form>
+
+            <div id="comments-list" class="space-y-4"></div>
+        </section>
+    </div>
+
+    <!-- WRAPPER HALAMAN STATIS (REDAKSI, KODE ETIK, PRIVASI, KONTAK) -->
+    <div id="static-page-view" class="hidden container mx-auto px-4 py-8 max-w-4xl">
+        <button onclick="showHome()" class="mb-6 text-news-blue font-semibold hover:underline flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> Kembali ke Beranda
+        </button>
+        <div class="bg-white p-6 md:p-10 rounded-lg shadow-sm border border-gray-100" id="static-page-content">
+            <!-- Konten statis diinjeksi JS -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-10 mt-12 text-center text-sm border-t-4 border-news-blue">
+        <div class="container mx-auto px-4 mb-6">
+            <!-- Link Footer -->
+            <div class="flex flex-wrap justify-center gap-6 md:gap-10 text-xs md:text-sm font-medium text-gray-300">
+                <a href="#" onclick="openStaticPage('redaksi'); return false;" class="hover:text-white transition hover:underline">Box Redaksi</a>
+                <a href="#" onclick="openStaticPage('kode-etik'); return false;" class="hover:text-white transition hover:underline">Kode Etik Jurnalistik</a>
+                <a href="#" onclick="openStaticPage('privasi'); return false;" class="hover:text-white transition hover:underline">Kebijakan Privasi</a>
+                <a href="#" onclick="openStaticPage('kontak'); return false;" class="hover:text-white transition hover:underline">Hubungi Kami</a>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500">&copy; 2026 PTWDS News Cloud. Semua hak cipta dilindungi.</p>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC REAL-TIME -->
+    <script>
+        // Config Google Apps Script Deployment
+        // Library Reference: https://script.google.com/macros/library/d/13W-EEobqeBLOv7eNuQZAbd1f6DxJuj1i6iW_vqmcsT6YDhoScQHPcqbx/21
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGHnDL90F3X9TZZNkUJIv1px-wxrpj28veO8KiK1lsqjw6aoq8NGIRb9-f4I6QE-waDw/exec";
+        
+        let globalArticles = [];
+        let globalUlasan = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const tickerContainer = document.getElementById('ticker-container');
+            const heroContainer = document.getElementById('hero-container');
+            
+            try {
+                tickerContainer.innerHTML = "Menghubungkan ke database PTWDS News...";
+                heroContainer.innerHTML = `<div class="text-center py-20"><i class="fas fa-spinner fa-spin text-4xl text-news-blue"></i><p class="mt-4 text-gray-500">Memuat berita terbaru dari server...</p></div>`;
+
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+                
+                const rawPosts = data.posts ? data.posts.reverse() : [];
+                globalArticles = rawPosts.map(p => ({
+                    id: p.ID || p.id,
+                    title: p.Judul || p.title || 'Tanpa Judul',
+                    category: p.Kategori || p.category || 'Berita Utama',
+                    image: p.Gambar || p.image || 'https://via.placeholder.com/800x400?text=Gambar+Berita',
+                    content: p.Konten || p.content || '',
+                    date: p.Tanggal || p.date || '',
+                    author: p.Penulis || p.author || 'Tim Redaksi'
+                }));
+
+                globalUlasan = data.ulasan || [];
+
+                const breakingNews = globalArticles.slice(0, 5).map(a => a.title);
+                renderTicker(breakingNews.length > 0 ? breakingNews : ["Selamat datang di PTWDS News"]);
+                renderHome(globalArticles);
+
+            } catch (error) {
+                console.error("Gagal memuat data:", error);
+                tickerContainer.innerHTML = "Gagal memuat berita terkini.";
+                heroContainer.innerHTML = `<div class="text-center py-20 text-red-500"><i class="fas fa-exclamation-triangle text-4xl mb-4"></i><p>Gagal terhubung ke database. Silakan muat ulang halaman.</p></div>`;
+            }
+        });
+
+        function renderTicker(news) {
+            document.getElementById('ticker-container').innerHTML = news.join(' &nbsp;&nbsp; | &nbsp;&nbsp; ') + ' &nbsp;&nbsp; | &nbsp;&nbsp; ';
+        }
+
+        function filterCategory(categoryName) {
+            showHome();
+            const sectionTitle = document.getElementById('section-title');
+
+            if (categoryName === 'Beranda') {
+                sectionTitle.textContent = "Berita Terkini";
+                renderHome(globalArticles);
+            } else {
+                sectionTitle.textContent = "Kategori: " + categoryName;
+                const filtered = globalArticles.filter(a => 
+                    a.category.toLowerCase().trim() === categoryName.toLowerCase().trim()
+                );
+                renderHome(filtered, categoryName);
+            }
+        }
+
+        function renderHome(articles) {
+            const heroContainer = document.getElementById('hero-container');
+            const latestContainer = document.getElementById('latest-news-container');
+
+            if(!articles || articles.length === 0) {
+                heroContainer.innerHTML = '';
+                latestContainer.innerHTML = '<p class="col-span-2 text-center text-gray-500 py-10">Belum ada artikel dipublikasikan untuk kategori ini.</p>';
+                return;
+            }
+
+            const headline = articles[0];
+            
+            if(headline) {
+                heroContainer.innerHTML = `
+                    <div onclick="openArticle('${headline.id}')" class="relative rounded-xl overflow-hidden shadow-lg cursor-pointer group">
+                        <img src="${headline.image}" onerror="this.src='https://via.placeholder.com/800x400?text=Gambar+Tidak+Tersedia'" class="w-full h-[50vh] md:h-[60vh] object-cover group-hover:scale-105 transition duration-700">
+                        <div class="absolute bottom-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent p-6 pt-20">
+                            <span class="bg-news-red text-white text-xs font-bold px-2.5 py-1 rounded tracking-wider uppercase">${headline.category}</span>
+                            <h1 class="text-white text-2xl md:text-4xl font-serif font-bold mt-3 mb-2 group-hover:text-gray-200 transition leading-tight">${headline.title}</h1>
+                            <span class="text-gray-300 text-sm"><i class="far fa-clock mr-1"></i> ${headline.date}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const otherArticles = articles.filter(a => a.id !== headline.id);
+            
+            if(otherArticles.length > 0) {
+                latestContainer.innerHTML = otherArticles.map(a => `
+                    <div onclick="openArticle('${a.id}')" class="flex gap-4 cursor-pointer group bg-white p-3 rounded-lg border border-gray-100 hover:shadow-md transition">
+                        <img src="${a.image}" onerror="this.src='https://via.placeholder.com/150?text=No+Img'" class="w-1/3 h-28 object-cover rounded">
+                        <div class="flex-1 flex flex-col justify-center">
+                            <span class="text-[10px] font-bold text-news-blue uppercase mb-1">${a.category}</span>
+                            <h3 class="font-bold font-serif group-hover:text-news-blue leading-snug line-clamp-2 text-gray-900 text-sm md:text-base">${a.title}</h3>
+                            <p class="text-xs text-gray-500 mt-2"><i class="far fa-clock mr-1"></i> ${a.date}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                latestContainer.innerHTML = '<p class="col-span-2 text-gray-500 text-sm">Tidak ada artikel tambahan dalam kategori ini.</p>';
+            }
+
+            document.getElementById('trending-container').innerHTML = globalArticles.slice(0, 5).map((a, i) => `
+                <li onclick="openArticle('${a.id}')" class="flex items-start group cursor-pointer border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                    <div class="text-2xl font-serif font-black text-gray-300 mr-3 group-hover:text-news-red transition">
+                        ${String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div>
+                        <h4 class="text-xs md:text-sm font-semibold text-gray-800 leading-tight group-hover:text-news-blue mt-1">${a.title}</h4>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function openArticle(id) {
+            const article = globalArticles.find(a => a.id == id);
+            if(!article) return;
+
+            hideAllViews();
+            document.getElementById('article-view').classList.remove('hidden');
+            window.scrollTo(0,0);
+
+            document.getElementById('detail-category').textContent = article.category;
+            document.getElementById('detail-title').textContent = article.title;
+            document.getElementById('detail-author').textContent = article.author;
+            document.getElementById('detail-date').textContent = article.date;
+            document.getElementById('detail-image').src = article.image;
+            document.getElementById('detail-caption').innerHTML = `<i class="fas fa-camera mr-1"></i> ${article.title}`;
+
+            let finalContent = article.content;
+
+            const otherArticles = globalArticles.filter(a => a.id != id);
+            if(otherArticles.length > 0 && finalContent.includes('</p>')) {
+                const paragraphs = finalContent.split('</p>');
+                if(paragraphs.length > 2) {
+                    const randomArticle = otherArticles[Math.floor(Math.random() * otherArticles.length)];
+                    const internalLinkHTML = `
+                        <div class="internal-link-box">
+                            <span class="text-xs text-gray-500 block mb-1">BACA JUGA:</span>
+                            <a href="#" onclick="openArticle('${randomArticle.id}'); return false;" class="text-news-blue hover:text-news-red hover:underline transition font-bold text-sm md:text-base">
+                                <i class="fas fa-link mr-1"></i> ${randomArticle.title}
+                            </a>
+                        </div>
+                    `;
+                    paragraphs[1] += internalLinkHTML;
+                    finalContent = paragraphs.join('</p>');
+                }
+            }
+
+            document.getElementById('detail-content').innerHTML = finalContent;
+            renderShareButtons(article);
+            renderComments(id);
+            document.getElementById('commentForm').onsubmit = (e) => submitComment(e, id);
+        }
+
+        function renderShareButtons(article) {
+            const pageUrl = encodeURIComponent(window.location.href);
+            const textTitle = encodeURIComponent(article.title);
+
+            document.getElementById('social-share-buttons').innerHTML = `
+                <a href="https://api.whatsapp.com/send?text=${textTitle}%20${pageUrl}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=${pageUrl}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition"><i class="fab fa-facebook-f"></i> Facebook</a>
+                <a href="https://twitter.com/intent/tweet?text=${textTitle}&url=${pageUrl}" target="_blank" class="bg-black hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition"><i class="fab fa-x-twitter"></i> Twitter</a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=${pageUrl}" target="_blank" class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition"><i class="fab fa-linkedin-in"></i> LinkedIn</a>
+                <a href="https://kumparan.com" target="_blank" class="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-semibold transition"><i class="fas fa-globe"></i> Kumparan</a>
+            `;
+        }
+
+        // FUNGSI UNTUK MEMBUKA HALAMAN STATIS FOOTER
+        function openStaticPage(pageType) {
+            hideAllViews();
+            const staticView = document.getElementById('static-page-view');
+            const contentBox = document.getElementById('static-page-content');
+            staticView.classList.remove('hidden');
+            window.scrollTo(0,0);
+
+            if (pageType === 'redaksi') {
+                contentBox.innerHTML = `
+                    <h1 class="text-3xl font-serif font-bold text-news-blue border-b pb-4 mb-6">Box Redaksi</h1>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p><strong>Penerbit:</strong> PT Media PTWDS Cloud Indonesia</p>
+                        <p><strong>Pemimpin Redaksi / Penanggung Jawab:</strong> Redaksi PTWDS</p>
+                        <p><strong>Editor Berita:</strong> Tim Redaksi PTWDS News</p>
+                        <p><strong>Tim TI & Siber:</strong> PTWDS Tech Team</p>
+                        <p><strong>Alamat Redaksi:</strong> Medan, Sumatera Utara, Indonesia</p>
+                    </div>
+                `;
+            } else if (pageType === 'kode-etik') {
+                contentBox.innerHTML = `
+                    <h1 class="text-3xl font-serif font-bold text-news-blue border-b pb-4 mb-6">Kode Etik Jurnalistik</h1>
+                    <div class="space-y-4 text-gray-700 leading-relaxed text-sm md:text-base">
+                        <p>PTWDS News berkomitmen menjunjung tinggi standar Kode Etik Jurnalistik Indonesia:</p>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li>Wartawan PTWDS News bersikap independen, menghasilkan berita yang akurat, berimbang, dan tidak beritikad buruk.</li>
+                            <li>Wartawan PTWDS News selalu menguji informasi, memberitakan secara berimbang, dan tidak mencampurkan fakta dan opini yang menghakimi.</li>
+                            <li>Wartawan PTWDS News tidak membuat berita bohong, fitnah, sadis, dan cabul.</li>
+                            <li>PTWDS News melayani Hak Jawab dan Hak Koreksi secara proporsional.</li>
+                        </ol>
+                    </div>
+                `;
+            } else if (pageType === 'privasi') {
+                contentBox.innerHTML = `
+                    <h1 class="text-3xl font-serif font-bold text-news-blue border-b pb-4 mb-6">Kebijakan Privasi</h1>
+                    <div class="space-y-4 text-gray-700 leading-relaxed text-sm md:text-base">
+                        <p>Kebijakan Privasi ini menjelaskan bagaimana PTWDS News mengumpulkan dan melindungi data pengguna:</p>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>Data nama dan email yang Anda masukkan saat menulis ulasan/komentar hanya digunakan untuk verifikasi diskusi.</li>
+                            <li>Kami tidak menjual atau membagikan data pribadi Anda kepada pihak ketiga mana pun.</li>
+                            <li>Website ini dapat menggunakan cookie standar untuk meningkatkan kenyamanan penjelajahan Anda.</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (pageType === 'kontak') {
+                contentBox.innerHTML = `
+                    <h1 class="text-3xl font-serif font-bold text-news-blue border-b pb-4 mb-6">Hubungi Kami</h1>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>Silakan hubungi tim kami untuk pers, kemitraan, atau pengiriman siaran pers melalui:</p>
+                        <p><i class="fas fa-envelope text-news-blue mr-2"></i> <strong>Email:</strong> redaksi@ptwdsnews.cloud</p>
+                        <p><i class="fab fa-whatsapp text-emerald-600 mr-2"></i> <strong>WhatsApp:</strong> +62 812-xxxx-xxxx</p>
+                        <p><i class="fas fa-map-marker-alt text-news-red mr-2"></i> <strong>Lokasi:</strong> Medan, Sumatera Utara</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderComments(postId) {
+            const komentarTerkait = globalUlasan.filter(u => (u.post_id || u.POST_ID) == postId);
+            const container = document.getElementById('comments-list');
+            
+            if(komentarTerkait.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">Belum ada ulasan untuk berita ini. Jadilah yang pertama berkomentar!</p>';
+                return;
+            }
+
+            container.innerHTML = komentarTerkait.map(k => `
+                <div class="flex space-x-4 border-b pb-4 mb-4">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-500 uppercase flex-shrink-0">
+                        ${k.nama ? k.nama.charAt(0) : 'U'}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-gray-800">${k.nama || k.Nama}</h4>
+                        <span class="text-[10px] text-gray-400 block mb-2">${k.created_at || k.Tanggal || 'Baru saja'}</span>
+                        <p class="text-gray-700 text-sm">${k.komentar || k.Komentar}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitComment(e, postId) {
+            e.preventDefault();
+            const btn = document.getElementById('comment-submit');
+            
+            const nama = document.getElementById('comment-nama').value;
+            const email = document.getElementById('comment-email').value;
+            const komentar = document.getElementById('comment-text').value;
+
+            btn.disabled = true;
+            btn.innerText = "Mengirim...";
+
+            const payload = {
+                action: "ulasan",
+                post_id: postId,
+                nama: nama,
+                email: email,
+                komentar: komentar
+            };
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if(result.status === "success") {
+                    globalUlasan.push({
+                        post_id: postId,
+                        nama: nama,
+                        komentar: komentar,
+                        created_at: new Date().toLocaleString("id-ID")
+                    });
+                    
+                    renderComments(postId);
+                    e.target.reset();
+                    alert("Komentar berhasil dikirim!");
+                }
+            } catch (error) {
+                alert("Gagal mengirim komentar, periksa koneksi Anda.");
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Kirim Komentar";
+            }
+        }
+
+        function hideAllViews() {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('article-view').classList.add('hidden');
+            document.getElementById('static-page-view').classList.add('hidden');
+        }
+
+        function showHome() {
+            hideAllViews();
+            document.getElementById('home-view').classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+    </script>
+</body>
+</html>
